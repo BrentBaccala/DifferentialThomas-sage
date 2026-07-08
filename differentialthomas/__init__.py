@@ -58,6 +58,45 @@ from .reduction import (
     verify_linear_combination,
     maple_length,
 )
+from .polyobj import inconsistent_polynom
+from .sorting import (
+    compare_polynomials_by_equation_then_ranking,
+    insert_into_qlist,
+    sort_qlist,
+)
+from .strategy import (
+    remove_leading_field_elements,
+    fill_s_by_smallest_leader,
+    strategy_smallest_element,
+    strategy,
+)
+from .passivity import criteria
+from .system import (
+    DifferentialSystem,
+    create_differential_system,
+    differential_system_janet_trees,
+    differential_system_equations,
+    differential_system_inequations,
+    differential_system_inequation_implied,
+    differential_system_reduce_object,
+    reduce_qlist_in_system,
+)
+from .factor import factorize
+from .splitting import (
+    ResultantData,
+    initialize_resultant,
+    sub_resultant,
+    prs_gcd,
+    co_factor,
+    split_by_initial,
+    split_by_squarefree,
+    split_by_squarefree_old,
+    divide_by_inequation,
+    divide_by_inequation_old,
+    inequation_lcm,
+    reduce_with_side_effects,
+    reduction,
+)
 
 __all__ = [
     "JetVar",
@@ -83,4 +122,21 @@ __all__ = [
     "reduce_wrt_janet_tree", "reduce_wrt_janet_trees",
     "reduce_nonlinear_tail_wrt_janet_trees",
     "LinearCombinationStep", "verify_linear_combination", "maple_length",
+    "inconsistent_polynom",
+    "compare_polynomials_by_equation_then_ranking", "insert_into_qlist",
+    "sort_qlist",
+    "remove_leading_field_elements", "fill_s_by_smallest_leader",
+    "strategy_smallest_element", "strategy",
+    "criteria",
+    "DifferentialSystem", "create_differential_system",
+    "differential_system_janet_trees", "differential_system_equations",
+    "differential_system_inequations",
+    "differential_system_inequation_implied",
+    "differential_system_reduce_object", "reduce_qlist_in_system",
+    "factorize",
+    "ResultantData", "initialize_resultant", "sub_resultant", "prs_gcd",
+    "co_factor", "split_by_initial", "split_by_squarefree",
+    "split_by_squarefree_old", "divide_by_inequation",
+    "divide_by_inequation_old", "inequation_lcm", "reduce_with_side_effects",
+    "reduction",
 ]

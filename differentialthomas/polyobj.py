@@ -437,6 +437,21 @@ def create_polynomial_object(p, ranking=None, inequation=False,
     return PolynomialObject(f)
 
 
+# -- `DifferentialThomas/InconsistentPolynom` (polynomobjects:512) -------------------
+
+def inconsistent_polynom(p):
+    """`DifferentialThomas/InconsistentPolynom`: True iff ``p`` is a
+    differential-field element (no differential variable) that is a nonzero
+    equation or a zero inequation -- an immediately inconsistent constraint.
+    ``ReductionSystem`` (default identity) is applied first."""
+    pp = p.ranking.reduction_system(p).standard_form()
+    if is_differential_field_element(create_polynomial_object(pp, p.ranking)):
+        if ((p.inequation() and pp.is_zero())
+                or (p.equation() and not pp.is_zero())):
+            return True
+    return False
+
+
 # -- `DifferentialThomas/IsDifferentialFieldElement` ---------------------------------
 
 def is_differential_field_element(p, ranking=None):

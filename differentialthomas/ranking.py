@@ -140,6 +140,41 @@ class Ranking(object):
         self.reduction_system = _identity
         self._ring = None
         self._base = base
+        # option flags consulted by the split / factor layer (reference
+        # ranking-table defaults, init:206-232)
+        self.factor = True                     # 'Factor'
+        self.factor_strong = False             # 'FactorStrong'
+        self.factor_inequations = True         # 'FactorInequations'
+        self.inequations_not_coprime = False   # 'InequationsNotCoprime'
+        self.inequations_not_squarefree = False  # 'InequationsNotSquarefree'
+        self.tail_reduction = True             # 'TailReduction'
+        self.reduction_old = False             # 'ReductionOld'
+        self.reduction_factor = False          # 'ReductionFactor'
+        self.tail_reduction_intermediate = False  # 'TailReductionIntermediate'
+        self.reduce_qlist_in_system = "Inequations"  # 'ReduceQListInSystem'
+        # strategy / sorting hooks (default CompareStrategy / FillS /
+        # SelectionStrategy, init:210-217); installed lazily to avoid an import
+        # cycle (sorting/strategy import polyobj which imports ranking).
+        self.compare_strategy = self._default_compare_strategy
+        self.fill_s = self._default_fill_s
+        self.selection_strategy = self._default_selection_strategy
+
+    # -- default strategy hooks (lazy imports break the cycle) ---------------
+
+    @staticmethod
+    def _default_compare_strategy(a, b, *force):
+        from .sorting import compare_polynomials_by_equation_then_ranking
+        return compare_polynomials_by_equation_then_ranking(a, b, *force)
+
+    @staticmethod
+    def _default_fill_s(ds):
+        from .strategy import fill_s_by_smallest_leader
+        return fill_s_by_smallest_leader(ds)
+
+    @staticmethod
+    def _default_selection_strategy(ds, s):
+        from .strategy import strategy_smallest_element
+        return strategy_smallest_element(ds, s)
 
     # -- substrate ring -------------------------------------------------------
 
