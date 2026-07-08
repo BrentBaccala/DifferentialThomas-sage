@@ -24,6 +24,30 @@ from .jetvar import (
 from .general import lcm_list, list_sum, deep_copy
 from .ranking import Ranking, compute_ranking, get_global_ranking, set_global_ranking
 from .polyobj import PolynomialObject, create_polynomial_object, is_differential_field_element
+from .derivation import (
+    partial_derivative,
+    partial_derivative_internal,
+    multiple_partial_derivative,
+)
+from .janet import (
+    INFINITY,
+    JanetNode,
+    JanetTreesObject,
+    create_janet_trees_object,
+    current_var,
+    janet_divisor_in_trees,
+    janet_divisor_in_tree,
+    janet_divisor_in_tree_rek,
+    janet_tree_leafs,
+    janet_trees_leafs,
+    insert_into_janet_trees,
+    insert_into_janet_tree,
+    remove_multiplicative_variable_in_subtree,
+    remove_elements_in_subtree,
+    complete_element_in_janet_tree,
+    print_janet_tree,
+    print_janet_trees,
+)
 
 __all__ = [
     "JetVar",
@@ -34,4 +58,14 @@ __all__ = [
     "Ranking", "compute_ranking", "get_global_ranking", "set_global_ranking",
     "PolynomialObject", "create_polynomial_object",
     "is_differential_field_element",
+    "partial_derivative", "partial_derivative_internal",
+    "multiple_partial_derivative",
+    "INFINITY", "JanetNode", "JanetTreesObject",
+    "create_janet_trees_object", "current_var",
+    "janet_divisor_in_trees", "janet_divisor_in_tree",
+    "janet_divisor_in_tree_rek", "janet_tree_leafs", "janet_trees_leafs",
+    "insert_into_janet_trees", "insert_into_janet_tree",
+    "remove_multiplicative_variable_in_subtree",
+    "remove_elements_in_subtree", "complete_element_in_janet_tree",
+    "print_janet_tree", "print_janet_trees",
 ]

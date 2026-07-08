@@ -211,7 +211,9 @@ class PolynomialObject(object):
         Phase 2 for genuine prolongations; defaults to the leading
         derivation)."""
         if self.f.get("Ancestor") is None:
-            self.f["Ancestor"] = self.leading_derivation()
+            # copy: Maple lists are values; the cached LeadingDerivation list
+            # must not be aliased by tree/derivation code (Phase-2 extension)
+            self.f["Ancestor"] = list(self.leading_derivation())
         return self.f["Ancestor"]
 
     def set_ancestor(self, deriv_list):
