@@ -1,0 +1,37 @@
+r"""
+differentialthomas -- a native Sage/Python port of Markus Lange-Hegermann's
+DifferentialThomas Maple package (differential Thomas decomposition).
+
+Ported from the LGPL Maple source at ``~/DifferentialThomas/src`` (Bächler,
+Gerdt, Lange-Hegermann, Robertz: "Algorithmic Thomas decomposition of algebraic
+and differential systems", J. Symbolic Computation 47 (2012) 1233-1266).
+
+The polynomial substrate is ``sage_differential_polynomial`` (BLAD-native
+``DifferentialPolynomial``); this package supplies the completion engine's
+object model, ranking, Janet trees, reduction, splitting and the work-queue
+main loop.  Phase 1 provides the object model (PolynomialObject), the ranking
+adapter, and the open-maple oracle harness.
+
+License: LGPL v3 (derivative of the LGPL DifferentialThomas package).
+"""
+
+from .jetvar import (
+    JetVar,
+    differential_variable_function,
+    differential_variable_derivation,
+    differential_variable_order,
+)
+from .general import lcm_list, list_sum, deep_copy
+from .ranking import Ranking, compute_ranking, get_global_ranking, set_global_ranking
+from .polyobj import PolynomialObject, create_polynomial_object, is_differential_field_element
+
+__all__ = [
+    "JetVar",
+    "differential_variable_function",
+    "differential_variable_derivation",
+    "differential_variable_order",
+    "lcm_list", "list_sum", "deep_copy",
+    "Ranking", "compute_ranking", "get_global_ranking", "set_global_ranking",
+    "PolynomialObject", "create_polynomial_object",
+    "is_differential_field_element",
+]
