@@ -79,6 +79,11 @@ from .system import (
     differential_system_inequations,
     differential_system_inequation_implied,
     differential_system_reduce_object,
+    differential_system_reduce,
+    differential_system_normal_form,
+    differential_system_tail_reduce,
+    differential_system_tail_reduction,
+    reduce_inequations_in_differential_system,
     reduce_qlist_in_system,
 )
 from .factor import factorize
@@ -139,4 +144,17 @@ __all__ = [
     "split_by_squarefree_old", "divide_by_inequation",
     "divide_by_inequation_old", "inequation_lcm", "reduce_with_side_effects",
     "reduction",
+    "differential_system_reduce", "differential_system_normal_form",
+    "differential_system_tail_reduce", "differential_system_tail_reduction",
+    "reduce_inequations_in_differential_system",
+    "proc_input", "do_next_step", "differential_thomas_decomposition",
+    "equations", "inequations",
 ]
+
+from .main import (
+    proc_input,
+    do_next_step,
+    differential_thomas_decomposition,
+    equations,
+    inequations,
+)

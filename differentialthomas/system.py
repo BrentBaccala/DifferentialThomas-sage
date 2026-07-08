@@ -33,7 +33,8 @@ from .general import deep_copy as _deep_copy
 from .polyobj import (create_polynomial_object, is_differential_field_element,
                       inconsistent_polynom)
 from .sorting import sort_qlist, insert_into_qlist
-from .reduction import reduce_wrt_janet_trees
+from .reduction import (reduce_wrt_janet_trees,
+                        reduce_nonlinear_tail_wrt_janet_trees)
 from .janet import (create_janet_trees_object, janet_trees_leafs,
                     janet_divisor_in_trees)
 
@@ -224,3 +225,102 @@ def reduce_qlist_in_system(ds):
                 and is_differential_field_element(a)):
             ds.Inconsistent = True
     ds.Q = insert_into_qlist(l, ds.Q)
+
+
+# ---------------------------------------------------------------------------
+# `DifferentialThomas/DifferentialSystemReduce` (differentialsystems:180)
+# ---------------------------------------------------------------------------
+
+def differential_system_reduce(ds, p):
+    """`DifferentialThomas/DifferentialSystemReduce`: head+initial reduce ``p``
+    (a polynomial or PolynomialObject) w.r.t. the system's trees; returns the
+    reduced *standard form* (a substrate polynomial).  The object form (used by
+    the implied-inequation heuristic and the split operators) is
+    :func:`differential_system_reduce_object`."""
+    return differential_system_reduce_object(ds, p).standard_form()
+
+
+# ---------------------------------------------------------------------------
+# `DifferentialThomas/DifferentialSystemNormalForm` (differentialsystems:214)
+# ---------------------------------------------------------------------------
+
+def differential_system_normal_form(ds, p):
+    """`DifferentialThomas/DifferentialSystemNormalForm`: full head+tail
+    (non-linear) reduction of ``p`` w.r.t. the system, returned as a normalised
+    rational function ``standard_form(r) / u`` (``u`` the reduced denominator
+    multiplier).  For the polynomial inputs of ex1-ex3 the multiplier is a
+    field element, so this reduces to the tail-reduced standard form."""
+    rk = ds.Ranking
+    pp = create_polynomial_object(p, rk)
+    pp.simplify_polynom()
+    r, u = reduce_nonlinear_tail_wrt_janet_trees(
+        ds.JanetTrees, pp, "denominator")
+    rr = r.standard_form()
+    if is_differential_field_element(create_polynomial_object(u, rk)):
+        return rr.exquo(rk.ring(u)) if not (u - rk.ring.one()).is_zero() else rr
+    # non-trivial denominator: reduce it too (recursion, as the reference)
+    uu = differential_system_normal_form(ds, create_polynomial_object(u, rk))
+    return rr.exquo(uu)
+
+
+# ---------------------------------------------------------------------------
+# `DifferentialThomas/DifferentialSystemTailReduce` (differentialsystems:275)
+# ---------------------------------------------------------------------------
+
+def differential_system_tail_reduce(ds, p, *extra):
+    """`DifferentialThomas/DifferentialSystemTailReduce`: (non-linear) tail
+    reduction of ``p`` w.r.t. the system's trees.  ``p`` may be a
+    PolynomialObject (reduced/substituted in place, as the reference does) or a
+    polynomial (wrapped first).  ``extra`` forwards the mode strings
+    (``"final"`` / ``"denominator"`` / ...) to
+    :func:`reduce_nonlinear_tail_wrt_janet_trees`."""
+    pp = create_polynomial_object(p, ds.Ranking)
+    return reduce_nonlinear_tail_wrt_janet_trees(ds.JanetTrees, pp, *extra)
+
+
+# ---------------------------------------------------------------------------
+# `DifferentialThomas/DifferentialSystemTailReduction` (differentialsystems:294)
+# ---------------------------------------------------------------------------
+
+def differential_system_tail_reduction(ds):
+    """`DifferentialThomas/DifferentialSystemTailReduction`: tail-reduce every
+    equation (tree leaf) of the system.  If any leader changed as a result, the
+    involutive basis is invalidated: re-queue all leaves and inequations, reset
+    the trees, and clear ``Finished`` (so the main loop re-completes)."""
+    trees = ds.JanetTrees
+    leaves = list(janet_trees_leafs(trees))
+    oldleaders = [leaf.leader() for leaf in leaves]
+    for a in leaves:
+        r = differential_system_tail_reduce(ds, a, "final")
+        r.simplify_polynom()
+    newleaders = [leaf.leader() for leaf in janet_trees_leafs(trees)]
+    if newleaders != oldleaders:
+        ds.Q = insert_into_qlist(list(janet_trees_leafs(trees)), ds.Q)
+        ds.Q = insert_into_qlist(list(ds.Inequations), ds.Q)
+        ds.Inequations = []
+        ds.JanetTrees = create_janet_trees_object(ds.Ranking)
+        ds.Finished = False
+
+
+# ---------------------------------------------------------------------------
+# `DifferentialThomas/ReduceInequationsInDifferentialSystem`
+# (differentialsystems:322)
+# ---------------------------------------------------------------------------
+
+def reduce_inequations_in_differential_system(ds, q):
+    """`DifferentialThomas/ReduceInequationsInDifferentialSystem`: after ``q``
+    is inserted as a new equation (leader ``Leader(q)``), move any inequation
+    that mentions that leader, or whose own leader is now Janet-divisible by the
+    trees, back into ``Q`` for re-treatment."""
+    trees = ds.JanetTrees
+    lq = q.leader()
+    l1 = [a for a in ds.Inequations if lq in a.diff_var_list()]
+    l2 = [a for a in ds.Inequations if lq not in a.diff_var_list()]
+    ds.Inequations = l2
+    ds.Q = insert_into_qlist(l1, ds.Q)
+    l1 = [a for a in ds.Inequations
+          if janet_divisor_in_trees(trees, a) is not None]
+    l2 = [a for a in ds.Inequations
+          if janet_divisor_in_trees(trees, a) is None]
+    ds.Inequations = l2
+    ds.Q = insert_into_qlist(l1, ds.Q)
