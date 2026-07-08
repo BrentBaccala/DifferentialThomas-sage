@@ -55,6 +55,10 @@ from fractions import Fraction
 from .jetvar import JetVar
 
 
+def _identity(p):
+    return p
+
+
 # module-global ranking, mirroring `DifferentialThomas/GlobalRanking`
 _GLOBAL_RANKING = None
 
@@ -131,6 +135,9 @@ class Ranking(object):
         # ProcInput; defaults here)
         self.linear = False
         self.often_remove_content = False
+        # `ReductionSystem` -- extra-reductor hook installed by ProcInput
+        # (main:238); defaults to the identity (main:66)
+        self.reduction_system = _identity
         self._ring = None
         self._base = base
 

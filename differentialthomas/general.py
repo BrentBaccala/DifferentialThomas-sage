@@ -22,6 +22,31 @@ Copy-vs-share rules of the port:
 """
 
 
+# -- `DifferentialThomas/SetMaxOrder` (main:24) -- global max-order bookkeeping
+
+MAX_ORDER = {"computation": 0, "since_reset": 0}
+
+
+def set_max_order(d):
+    """`DifferentialThomas/SetMaxOrder`: record the maximal differential
+    order seen so far.  ``d`` may be an int, a list, or a PolynomialObject
+    (its ``MaxOrder``)."""
+    if isinstance(d, (list, tuple)):
+        for x in d:
+            set_max_order(x)
+    elif isinstance(d, int):
+        MAX_ORDER["computation"] = max(MAX_ORDER["computation"], d)
+        MAX_ORDER["since_reset"] = max(MAX_ORDER["since_reset"], d)
+    elif hasattr(d, "max_order"):
+        set_max_order(d.max_order())
+    else:
+        raise TypeError("unknown input in SetMaxOrder")
+
+
+def reset_max_order():
+    MAX_ORDER["since_reset"] = 0
+
+
 def lcm_list(l1, l2):
     """`DifferentialThomas/LCMList`: element-wise max of two exponent lists
     (the LCM of the corresponding derivative monomials)."""

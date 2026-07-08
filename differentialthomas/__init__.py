@@ -21,7 +21,7 @@ from .jetvar import (
     differential_variable_derivation,
     differential_variable_order,
 )
-from .general import lcm_list, list_sum, deep_copy
+from .general import lcm_list, list_sum, deep_copy, set_max_order, reset_max_order
 from .ranking import Ranking, compute_ranking, get_global_ranking, set_global_ranking
 from .polyobj import PolynomialObject, create_polynomial_object, is_differential_field_element
 from .derivation import (
@@ -48,6 +48,16 @@ from .janet import (
     print_janet_tree,
     print_janet_trees,
 )
+from .reduction import (
+    pseudo_remainder,
+    differential_pseudo_reduction,
+    reduce_wrt_janet_tree,
+    reduce_wrt_janet_trees,
+    reduce_nonlinear_tail_wrt_janet_trees,
+    LinearCombinationStep,
+    verify_linear_combination,
+    maple_length,
+)
 
 __all__ = [
     "JetVar",
@@ -68,4 +78,9 @@ __all__ = [
     "remove_multiplicative_variable_in_subtree",
     "remove_elements_in_subtree", "complete_element_in_janet_tree",
     "print_janet_tree", "print_janet_trees",
+    "set_max_order", "reset_max_order",
+    "pseudo_remainder", "differential_pseudo_reduction",
+    "reduce_wrt_janet_tree", "reduce_wrt_janet_trees",
+    "reduce_nonlinear_tail_wrt_janet_trees",
+    "LinearCombinationStep", "verify_linear_combination", "maple_length",
 ]

@@ -323,6 +323,63 @@ class PolynomialObject(object):
             self.f["Order"] = -1 if ld == 1 else ld.order
         return self.f["Order"]
 
+    # -- `DifferentialThomas/SimplifyPolynom` (polynomobjects:97) ------------------------------------
+
+    def simplify_polynom(self, force=False):
+        """Remove the content from the polynomial (in place).
+
+        When the initial is known nonzero and (``force`` or the ranking's
+        ``OftenRemoveContent``), the content w.r.t. the *leader* is removed;
+        otherwise the content w.r.t. the whole ``DiffVarList``.  The content
+        follows the oracle stack's conventions exactly
+        (:func:`differentialthomas.maplecas.maple_content` -- including the
+        sign-carrying single-group quirk).  On an actual division the
+        cached ``Initial`` is rescaled and the ``PartialDerivative_<x>`` /
+        ``DiffVarList`` / ``Factors`` caches are dropped, mirroring the
+        reference's invalidation set."""
+        from .maplecas import maple_content
+        from . import rtrace
+        targs = [rtrace.desc_obj(self)]
+        if force:
+            targs.append(rtrace.desc_literal('"force"'))
+
+        rk = self.ranking
+        if (self.leader() == 1
+                or rk.standard_form_simplify(self.standard_form()).is_zero()):
+            rtrace.record("SimplifyPolynom", targs, rtrace.desc_obj(self))
+            return self
+
+        if self.nonzero_initial() and (force or rk.often_remove_content):
+            c = maple_content(self.standard_form(), [self.leader()], rk)
+        else:
+            c = maple_content(self.standard_form(), self.diff_var_list(), rk)
+
+        R = rk.ring
+        if not ((c - R.one()).is_zero() or (c + R.one()).is_zero()):
+            self.f["Polynom"] = rk.standard_form_simplify(
+                self.standard_form().exquo(c))
+            if self.f.get("Initial") is not None:
+                self.f["Initial"] = rk.standard_form_simplify(
+                    self.f["Initial"].exquo(c))
+            for x in rk.ivar:
+                self.f.pop("PartialDerivative_" + x, None)
+            self.f.pop("DiffVarList", None)
+            self.f.pop("Factors", None)
+        rtrace.record("SimplifyPolynom", targs, rtrace.desc_obj(self))
+        return self
+
+    # -- Maple copy() (shallow table copy) -----------------------------------------------------------
+
+    def copy(self):
+        """Maple ``copy(table)``: a new object with the top-level fields
+        copied.  Lists are Maple *values*, so they are copied one level;
+        nested tables (ConsideredProlongations, cached PartialDerivative
+        objects) remain shared, as in the reference."""
+        g = {}
+        for k, v in self.f.items():
+            g[k] = list(v) if isinstance(v, list) else v
+        return PolynomialObject(g)
+
     # -- DeepCopy (general.deep_copy protocol) ------------------------------------------------------
 
     def deep_copy(self):
