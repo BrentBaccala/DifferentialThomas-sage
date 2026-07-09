@@ -1,0 +1,29 @@
+SURVEYRESULT cell=1 status=OOM_OR_TIMEOUT subcells=0 wall=? peakrss=? rc=134
+SURVEYRESULT cell=2 status=ERROR subcells=0 wall=1381 peakrss=38.68 err=MemoryError
+SURVEYRESULT cell=3 status=OK subcells=2 wall=0 peakrss=4.44 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=4 status=OK subcells=1 wall=0 peakrss=4.44 erels=none
+SURVEYRESULT cell=5 status=OK subcells=1 wall=0 peakrss=4.44 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=6 status=OK subcells=1 wall=0 peakrss=4.44 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=7 status=OK subcells=1 wall=0 peakrss=4.44 erels=none
+SURVEYRESULT cell=8 status=OK subcells=1 wall=0 peakrss=4.44 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=9 status=OK subcells=1 wall=0 peakrss=4.44 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=10 status=OK subcells=2 wall=18 peakrss=5.05 erels=none
+SURVEYRESULT cell=11 status=OK subcells=2 wall=6 peakrss=4.65 erels=none
+SURVEYRESULT cell=12 status=OK subcells=2 wall=0 peakrss=4.44 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=13 status=OK subcells=1 wall=0 peakrss=4.44 erels=none
+SURVEYRESULT cell=14 status=OK subcells=1 wall=0 peakrss=4.44 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=15 status=OK subcells=1 wall=0 peakrss=4.44 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=16 status=OK subcells=1 wall=0 peakrss=4.44 erels=none
+SURVEYRESULT cell=17 status=OK subcells=1 wall=0 peakrss=4.44 erels=none
+SURVEYRESULT cell=18 status=OK subcells=1 wall=0 peakrss=4.44 erels=none
+SURVEYRESULT cell=19 status=OK subcells=1 wall=0 peakrss=4.44 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=20 status=OK subcells=4 wall=1 peakrss=4.45 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1|r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=21 status=OK subcells=2 wall=0 peakrss=4.45 erels=E_z*r*x^2 + E_z*r*y^2 + E_z*r*z^2 - z|r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=22 status=OK subcells=2 wall=0 peakrss=4.45 erels=E_y*r*x^2 + E_y*r*y^2 + E_y*r*z^2 - y|E_z*r*x^2 + E_z*r*y^2 + E_z*r*z^2 - z|r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=23 status=OK subcells=1 wall=0 peakrss=4.44 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=24 status=OK subcells=1 wall=0 peakrss=4.44 erels=r*E + 1|E^2*x^2 + E^2*y^2 + E^2*z^2 - 1
+SURVEYRESULT cell=25 status=OOM_OR_TIMEOUT subcells=0 wall=? peakrss=? rc=134
+SURVEYRESULT cell=26 status=OOM_OR_TIMEOUT subcells=0 wall=? peakrss=? rc=134
+SURVEYRESULT cell=27 status=OK subcells=1 wall=0 peakrss=4.44 erels=none
+SURVEYRESULT cell=28 status=OOM_OR_TIMEOUT subcells=0 wall=? peakrss=? rc=134
+SURVEY_ALL_DONE 2026-07-09T02:56:54-04:00
