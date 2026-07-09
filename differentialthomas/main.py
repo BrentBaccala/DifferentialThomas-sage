@@ -136,11 +136,20 @@ class _BranchStats(object):
         self.t0 = time.time()
 
     def line(self, qlen, ncells):
-        return ("[dt-branch] iter=%d step=%d queue=%d peakq=%d finished=%d "
+        base = ("[dt-branch] iter=%d step=%d queue=%d peakq=%d finished=%d "
                 "cells=%d dropped=%d rss=%.0fMB t=%.0fs"
                 % (self.iters, self.steps, qlen, self.peak_queue,
                    self.finished, ncells, self.dropped_inconsistent,
                    _peak_rss_mb(), time.time() - self.t0))
+        try:
+            from sage_differential_polynomial import _blad
+            m, s2, q = _blad.stack_stats()
+            base += (" blad[main=%.0f second=%.0f quiet=%.0f arena=%.0f]MB"
+                     % (m / 1e6, s2 / 1e6, q / 1e6,
+                        max(_blad.stack_usage(), 0) / 1e6))
+        except Exception:
+            pass
+        return base
 
 
 # ---------------------------------------------------------------------------
