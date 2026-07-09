@@ -50,6 +50,10 @@ current system (when it survives) followed by the spawned children, each with
 :func:`~differentialthomas.splitting.reduction`.
 """
 
+import os
+import sys
+import time
+
 from .general import MAX_ORDER, set_max_order, reset_max_order
 from .polyobj import create_polynomial_object, is_differential_field_element
 from .ranking import get_global_ranking
@@ -71,6 +75,46 @@ from .system import (
 )
 
 INFINITY = float("inf")
+
+
+# ---------------------------------------------------------------------------
+# branch / RSS instrumentation (env-gated, off by default)
+#
+# ``DT_BRANCH_TRACE=1`` prints a periodic progress line and a final summary of
+# the work-queue trajectory: systems dropped-inconsistent at the top of the
+# loop, systems finished (cells collected), total DoNextStep calls, the peak
+# work-queue length, and the process peak RSS.  ``DT_BRANCH_TRACE_EVERY=N``
+# sets how often (in loop iterations) the progress line is emitted (default
+# 500).  This is the acceptance instrumentation for the hydrogen profile.
+# ---------------------------------------------------------------------------
+
+def _peak_rss_mb():
+    """Process peak RSS in MB (resource.ru_maxrss is KB on Linux)."""
+    try:
+        import resource
+        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
+    except Exception:
+        return float("nan")
+
+
+class _BranchStats(object):
+    __slots__ = ("iters", "steps", "dropped_inconsistent", "finished",
+                 "peak_queue", "t0")
+
+    def __init__(self):
+        self.iters = 0
+        self.steps = 0
+        self.dropped_inconsistent = 0
+        self.finished = 0
+        self.peak_queue = 0
+        self.t0 = time.time()
+
+    def line(self, qlen, ncells):
+        return ("[dt-branch] iter=%d step=%d queue=%d peakq=%d finished=%d "
+                "cells=%d dropped=%d rss=%.0fMB t=%.0fs"
+                % (self.iters, self.steps, qlen, self.peak_queue,
+                   self.finished, ncells, self.dropped_inconsistent,
+                   _peak_rss_mb(), time.time() - self.t0))
 
 
 # ---------------------------------------------------------------------------
@@ -391,25 +435,49 @@ def differential_thomas_decomposition(eqs, ineqs=(), ranking=None,
 
     result = []
 
+    trace = os.environ.get("DT_BRANCH_TRACE")
+    stats = _BranchStats() if trace else None
+    every = int(os.environ.get("DT_BRANCH_TRACE_EVERY", "500") or "500")
+
     while system_list != []:
         cur = system_list[0]
 
+        if stats is not None:
+            stats.iters += 1
+            if len(system_list) > stats.peak_queue:
+                stats.peak_queue = len(system_list)
+
         if cur.Inconsistent:
             system_list = system_list[1:]
+            if stats is not None:
+                stats.dropped_inconsistent += 1
         elif cur.Finished:
             # FactorModuleBasis is combinatorial and side-effect free -> skip.
             differential_system_tail_reduction(cur)
             if cur.Finished:            # tail reduction may have un-finished it
                 if not cur.Inconsistent:
                     result.append(cur)
+                    if stats is not None:
+                        stats.finished += 1
                 system_list = system_list[1:]
         else:
             new = do_next_step(cur)
             # SystemList := [op(new), op(2..nops(SystemList),SystemList)]
             system_list = list(new) + system_list[1:]
+            if stats is not None:
+                stats.steps += 1
+
+        if stats is not None and (stats.iters % every == 0):
+            sys.stderr.write(stats.line(len(system_list), len(result)) + "\n")
+            sys.stderr.flush()
 
         if on_step is not None:
             on_step(system_list)
+
+    if stats is not None:
+        sys.stderr.write("[dt-branch] DONE " + stats.line(0, len(result))
+                         + "\n")
+        sys.stderr.flush()
 
     return result
 
