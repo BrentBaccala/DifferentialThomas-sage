@@ -78,6 +78,32 @@ INFINITY = float("inf")
 
 
 # ---------------------------------------------------------------------------
+# In-epoch BLAD arena GC (env-tunable; ON by default)
+#
+# The single-epoch BLAD arena never frees pseudo-division intermediates on its
+# own, so a long decomposition retains every polynomial ever built for the life
+# of the run (the 42 GB "operand swell" deaths, and the phase-6 RSS shortfall).
+# The substrate's ``ring.gc()`` reclaims that arena wholesale in O(1) at a
+# quiescent point; we trigger it at the DoNextStep boundary.
+#
+# - ``DT_ARENA_GC=0``       kill switch (default on).
+# - ``DT_ARENA_GC_MB=N``    size trigger: GC when the reclaimable arena on
+#                           BLAD's main stack exceeds N MB (default 256).
+# - ``DT_ARENA_GC_EVERY=N`` step trigger: GC every N DoNextStep calls
+#                           (default 0 = disabled, size trigger only).
+# Whichever trigger fires first runs the GC.  Set both to 0 to disable (but
+# leave ``DT_ARENA_GC`` unset) is equivalent to the kill switch for the size
+# path while keeping the count path off.
+# ---------------------------------------------------------------------------
+
+def _arena_gc_config():
+    on = os.environ.get("DT_ARENA_GC", "1") != "0"
+    every = int(os.environ.get("DT_ARENA_GC_EVERY", "0") or "0")
+    mb = float(os.environ.get("DT_ARENA_GC_MB", "256") or "256")
+    return on, every, mb
+
+
+# ---------------------------------------------------------------------------
 # branch / RSS instrumentation (env-gated, off by default)
 #
 # ``DT_BRANCH_TRACE=1`` prints a periodic progress line and a final summary of
@@ -439,6 +465,13 @@ def differential_thomas_decomposition(eqs, ineqs=(), ranking=None,
     stats = _BranchStats() if trace else None
     every = int(os.environ.get("DT_BRANCH_TRACE_EVERY", "500") or "500")
 
+    gc_on, gc_every, gc_mb = _arena_gc_config()
+    gc_bytes = gc_mb * 1024 * 1024
+    gc_steps = 0
+    gc_ring = None
+    gc_count = 0
+    from sage_differential_polynomial import _blad as _sdp_blad
+
     while system_list != []:
         cur = system_list[0]
 
@@ -467,6 +500,22 @@ def differential_thomas_decomposition(eqs, ineqs=(), ranking=None,
             if stats is not None:
                 stats.steps += 1
 
+            # --- in-epoch arena GC at the DoNextStep boundary (quiescent) ----
+            if gc_on:
+                if gc_ring is None:
+                    gc_ring = cur.Ranking.ring
+                gc_steps += 1
+                do_gc = False
+                if gc_every and gc_steps % gc_every == 0:
+                    do_gc = True
+                elif gc_bytes > 0:
+                    used = _sdp_blad.stack_usage()
+                    if 0 <= gc_bytes <= used:
+                        do_gc = True
+                if do_gc:
+                    gc_ring.gc()
+                    gc_count += 1
+
         if stats is not None and (stats.iters % every == 0):
             sys.stderr.write(stats.line(len(system_list), len(result)) + "\n")
             sys.stderr.flush()
@@ -476,7 +525,7 @@ def differential_thomas_decomposition(eqs, ineqs=(), ranking=None,
 
     if stats is not None:
         sys.stderr.write("[dt-branch] DONE " + stats.line(0, len(result))
-                         + "\n")
+                         + (" arena_gc=%d" % gc_count) + "\n")
         sys.stderr.flush()
 
     return result
