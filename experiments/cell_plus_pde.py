@@ -80,19 +80,33 @@ def main():
 
     staged_eqs = list(eqs) + [PDE]
     t1 = time.time()
-    subcells = dt.differential_thomas_decomposition(staged_eqs, list(ineqs), rk)
+    all_erels = []
+    try:
+        subcells = dt.differential_thomas_decomposition(staged_eqs, list(ineqs), rk)
+    except BaseException as exc:                       # MemoryError etc.
+        dt_wall = time.time() - t1
+        print("\n=== cell %d FAILED after %.0fs, peak RSS %.2f GB: %r ==="
+              % (n, dt_wall, rss_gb(), exc), flush=True)
+        print("SURVEYRESULT cell=%d status=ERROR subcells=0 wall=%.0f "
+              "peakrss=%.2f err=%s" % (n, dt_wall, rss_gb(),
+                                       type(exc).__name__), flush=True)
+        return 1
     dt_wall = time.time() - t1
     print("\n=== RESULT: cell %d u {PDE} -> %d sub-cells in %.0fs, peak RSS %.2f GB ==="
           % (n, len(subcells), dt_wall, rss_gb()), flush=True)
     for j, sc in enumerate(subcells):
         seqs = dt.differential_system_equations(sc)
         sineqs = dt.differential_system_inequations(sc)
-        # surface any energy relation E + c = 0
+        # surface any energy relation E + c = 0 (pure E/coordinate relation)
         e_rels = [str(q) for q in seqs if 'E' in str(q) and 'Psi' not in str(q)
                   and 'DPsi' not in str(q) and 'v' not in str(q).replace('E', '')]
+        all_erels += e_rels
         print("  sub-cell %d: %d eqs, %d ineqs%s"
               % (j, len(seqs), len(sineqs),
                  ("  E-rels: " + "; ".join(e_rels)) if e_rels else ""), flush=True)
+    print("SURVEYRESULT cell=%d status=OK subcells=%d wall=%.0f peakrss=%.2f "
+          "erels=%s" % (n, len(subcells), dt_wall, rss_gb(),
+                        ("|".join(all_erels) if all_erels else "none")), flush=True)
     return 0
 
 
