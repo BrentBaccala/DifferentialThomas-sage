@@ -76,6 +76,7 @@ from .polyobj import (PolynomialObject, create_polynomial_object,
                       is_differential_field_element)
 from .ranking import compare_componentwise
 from .maplecas import oracle_gcd_parts, oracle_div_gcd
+from . import ctrace
 from . import rtrace
 
 INFINITY = math.inf
@@ -174,6 +175,9 @@ def pseudo_remainder(uu, vv, dononlineartail=False, cofactor=None):
     qq = R.zero() if cofactor is not None else None
     xgen = R.gen(xb) if xb is not None else None
 
+    _ct = ctrace.pr_call(r, vv.standard_form(), lv) if ctrace.enabled else None
+    _it = 0
+
     while dv <= dr and not r.is_zero():
         lr = r.coefficient_in(xb, dr)
         g0, unit = oracle_gcd_parts(lr, lv, rk)
@@ -193,6 +197,9 @@ def pseudo_remainder(uu, vv, dononlineartail=False, cofactor=None):
             step = lr if dr == dv else lr * _pow(xgen, dr - dv)
             qq = newf * qq + step
         dr = r.degree_in(xb)
+        if _ct is not None:
+            _it += 1
+            ctrace.pr_step(_ct, _it, dr, r, newf)
 
     if cofactor is not None:
         cofactor.append(qq)

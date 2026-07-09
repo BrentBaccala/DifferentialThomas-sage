@@ -356,6 +356,9 @@ class PolynomialObject(object):
 
         R = rk.ring
         if not ((c - R.one()).is_zero() or (c + R.one()).is_zero()):
+            from . import ctrace
+            if ctrace.enabled:
+                ctrace.simplify_removed(self.standard_form(), c)
             self.f["Polynom"] = rk.standard_form_simplify(
                 self.standard_form().exquo(c))
             if self.f.get("Initial") is not None:
