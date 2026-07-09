@@ -93,6 +93,14 @@ def _pow(base, exp):
     return out
 
 
+def _maybe_gc(ring):
+    """Size-triggered in-epoch arena GC (no-op unless the driver armed the
+    ring's threshold -- see ``main._arena_gc_config``)."""
+    mg = getattr(ring, "maybe_gc", None)
+    if mg is not None:
+        mg()
+
+
 def _parse_tail_args(extra):
     """The reference's ``"tail"`` / ``"nonlineartail"`` argument parsing
     (accepts the bare string or a ``(name, value)`` pair for Maple's
@@ -177,6 +185,7 @@ def pseudo_remainder(uu, vv, dononlineartail=False, cofactor=None):
 
     _ct = ctrace.pr_call(r, vv.standard_form(), lv) if ctrace.enabled else None
     _it = 0
+    _gc_tick = 0
 
     while dv <= dr and not r.is_zero():
         lr = r.coefficient_in(xb, dr)
@@ -200,6 +209,14 @@ def pseudo_remainder(uu, vv, dononlineartail=False, cofactor=None):
         if _ct is not None:
             _it += 1
             ctrace.pr_step(_ct, _it, dr, r, newf)
+        # In-epoch arena GC hook: a long pseudo-division chain on huge operands
+        # allocates GBs without ever returning to the DoNextStep boundary (the
+        # operand-swell deaths).  Every value live across iterations is a
+        # DifferentialPolynomial (registry-snapshotted), so this is a safe
+        # quiescent point; maybe_gc is a cheap no-op below the size threshold.
+        _gc_tick += 1
+        if (_gc_tick & 31) == 0:
+            _maybe_gc(R)
 
     if cofactor is not None:
         cofactor.append(qq)

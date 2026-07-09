@@ -466,11 +466,15 @@ def differential_thomas_decomposition(eqs, ineqs=(), ranking=None,
     every = int(os.environ.get("DT_BRANCH_TRACE_EVERY", "500") or "500")
 
     gc_on, gc_every, gc_mb = _arena_gc_config()
-    gc_bytes = gc_mb * 1024 * 1024
     gc_steps = 0
     gc_ring = None
-    gc_count = 0
-    from sage_differential_polynomial import _blad as _sdp_blad
+    if gc_on and system_list:
+        gc_ring = system_list[0].Ranking.ring
+        if gc_mb > 0:
+            # Arm the ring-level size trigger: ring.maybe_gc() now fires from
+            # the hot pseudo-division loop (reduction.pseudo_remainder) and the
+            # tail-reduction endgame too, not only at the step boundary.
+            gc_ring.set_gc_threshold(int(gc_mb * 1024 * 1024))
 
     while system_list != []:
         cur = system_list[0]
@@ -493,6 +497,9 @@ def differential_thomas_decomposition(eqs, ineqs=(), ranking=None,
                     if stats is not None:
                         stats.finished += 1
                 system_list = system_list[1:]
+            # tail reduction allocates like a full step; GC its garbage too
+            if gc_ring is not None:
+                gc_ring.maybe_gc()
         else:
             new = do_next_step(cur)
             # SystemList := [op(new), op(2..nops(SystemList),SystemList)]
@@ -505,16 +512,10 @@ def differential_thomas_decomposition(eqs, ineqs=(), ranking=None,
                 if gc_ring is None:
                     gc_ring = cur.Ranking.ring
                 gc_steps += 1
-                do_gc = False
                 if gc_every and gc_steps % gc_every == 0:
-                    do_gc = True
-                elif gc_bytes > 0:
-                    used = _sdp_blad.stack_usage()
-                    if 0 <= gc_bytes <= used:
-                        do_gc = True
-                if do_gc:
                     gc_ring.gc()
-                    gc_count += 1
+                elif gc_ring is not None:
+                    gc_ring.maybe_gc()
 
         if stats is not None and (stats.iters % every == 0):
             sys.stderr.write(stats.line(len(system_list), len(result)) + "\n")
@@ -524,8 +525,9 @@ def differential_thomas_decomposition(eqs, ineqs=(), ranking=None,
             on_step(system_list)
 
     if stats is not None:
+        ngc = gc_ring.gc_count if gc_ring is not None else 0
         sys.stderr.write("[dt-branch] DONE " + stats.line(0, len(result))
-                         + (" arena_gc=%d" % gc_count) + "\n")
+                         + (" arena_gc=%d" % ngc) + "\n")
         sys.stderr.flush()
 
     return result
