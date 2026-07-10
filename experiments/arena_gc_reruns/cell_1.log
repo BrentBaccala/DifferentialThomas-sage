@@ -1,0 +1,39 @@
+=== ansatz decomposition (29-cell target) ===
+[dt-branch] iter=2000 step=1975 queue=5 peakq=14 finished=25 cells=25 dropped=0 rss=355MB t=21s
+[dt-branch] DONE [dt-branch] iter=2499 step=2470 queue=0 peakq=14 finished=29 cells=29 dropped=0 rss=1745MB t=230s arena_gc=2
+ansatz: 29 cells in 230s, peak RSS 1.70 GB
+
+idx  #eqs  #ineqs  ineqs(short)
+  0    39      3   a1, v4, v1^2*a1^2*x^2 + 2*v1*v2*a1
+  1    37      2   a1, v1*a1*x + v2*a1*y + v3*a1*
+  2    37      1   a0
+  3    26      2   a1, b0
+  4    24      2   b1, a1
+  5    24      4   c1, b1, a1
+  6    22      3   b1, a1, Psi
+  7    22      1   a1
+  8    22      3   c1, a1, Psi
+  9    20      2   a1, Psi
+ 10    31      2   b1, v1*b1*x + v2*b1*y + v3*b1*
+ 11    29      1   b0
+ 12    24      2   b0, DDPsi*b0^2 + Psi*b0*c1 - P
+ 13    22      1   b1
+ 14    22      3   c1, b1, Psi
+ 15    20      2   b1, Psi
+ 16    25      0   
+ 17    18      1   DDPsi
+ 18    20      1   DPsi
+ 19    20      2   c1, Psi
+ 20    26      2   v3, Psi
+ 21    24      2   v2, Psi
+ 22    22      1   Psi
+ 23    19      2   Psi, DDPsi_y
+ 24    18      2   Psi, DDPsi_z
+ 25    33      4   v4, b1, v1^2*b1^2*x^2 + 2*v1*v2*b1
+ 26    31      3   v4, b0, v3^2*x^2 + v3^2*y^2 + v3^2
+ 27    27      1   v4
+ 28    28      3   v4, v3^2*x^2 + v3^2*y^2 + v3^2, Psi
+
+=== staging PDE onto cell 1 (37 eqs, 2 ineqs) ===
+PDE: -Psi_x_x*r - Psi_y_y*r - Psi_z_z*r - 2*Psi*r*E - 2*Psi
+SURVEYRESULT cell=1 status=TIMEOUT subcells=0 wall=? peakrss=? rc=124

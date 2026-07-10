@@ -1,0 +1,48 @@
+# PDE-staging survey RE-RUN with the in-epoch BLAD arena GC ON
+#
+# Task 461 (differentialthomas-sage-7-arena-gc).  Re-run of the five cells that
+# died by "operand swell" in the original survey (survey_summary.txt): cells
+# 1, 2, 25, 26, 28.  Host c200-1 (94 GB, 22 cores); per-cell 42 GB address-space
+# cap (ulimit -v 42000000); 6 h timeout (raised from the original 2 h once the
+# 2 h runs proved compute-bound with flat, memory-bounded RSS, not the old
+# memory death).  Arena GC ON by default (DT_ARENA_GC unset).
+#
+# Substrate commit  928ae45  (sage-differential-polynomial)
+# Driver commit     ea5b914  (DifferentialThomas-sage)  [logs pulled before f6b88ca]
+# Launched          2026-07-09T17:56:50-04:00
+# Full logs + 5-min RSS sampler: experiments/arena_gc_reruns/
+#
+# OUTCOME: 0 / 5 cells completed.  This is the prompt's explicitly-acceptable
+# null-result branch.  The headline is a FAILURE-MODE SHIFT, not a completion:
+# the arena GC removed the retained-garbage wall (the original deaths were GMP
+# abort()/SIGABRT, rc=134, from thousands of retained pseudo-division
+# intermediates), and every cell now either times out while compute-bound with
+# a FLAT, memory-bounded RSS far below its cap, or dies with a clean Python
+# MemoryError on a genuinely large LIVE operand -- never the GMP abort.
+#
+# Verified mid-step-swell: DT_BRANCH_TRACE=1 (EVERY=2000) WAS set, yet every
+# timed-out cell logged only the 2 dt-branch lines of the startup ansatz
+# pre-decomposition (finished=29) and ZERO staging-step lines in 6 h.  The
+# staged decomposition completes zero DoNextStep steps -- it is stuck inside a
+# single reduction step (same signature as cell 0).  A step-boundary GC cannot
+# reach intra-step swell; that is the next investigation.
+#
+# cell | orig survey            | RE-RUN (GC on)                          | peak RSS (sampler)
+# -----|------------------------|-----------------------------------------|-------------------
+# 1    | rc=134 GMP abort       | TIMEOUT rc=124 @6h, 0 staging steps     | 7.7 GB  (flat)
+# 2    | MemoryError @1381s,39GB| TIMEOUT rc=124 @6h, 0 staging steps     | 17.9 GB (flat)
+# 25   | rc=134 GMP abort       | ERROR MemoryError @3623s (clean, <cap)  | 38.7 GB (36.9 sampler)
+# 26   | rc=134 GMP abort       | TIMEOUT rc=124 @6h, 0 staging steps     | 2.1 GB  (flat)
+# 28   | rc=134 GMP abort       | TIMEOUT rc=124 @6h, 0 staging steps     | 8.8 GB  (flat)
+#
+# At the 2 h mark (coordinator observation) cells 1/2/28 were at 100% CPU with
+# RSS plateaued for >1 h -- alive, compute-bound, memory-bounded: already a
+# categorical improvement over the pre-GC aborts.  cell 26 plateaus at 2.1 GB
+# and still does not finish in 6 h -> a wall-clock wall, not a memory wall.
+
+SURVEYRESULT cell=1  status=TIMEOUT     subcells=0 wall>21600 peakrss=7.7  staging_steps=0 rc=124 note=compute-bound-flat-rss
+SURVEYRESULT cell=2  status=TIMEOUT     subcells=0 wall>21600 peakrss=17.9 staging_steps=0 rc=124 note=compute-bound-flat-rss
+SURVEYRESULT cell=25 status=MEMORYERROR subcells=0 wall=3623  peakrss=38.74 staging_steps=0 rc=1  note=clean-python-MemoryError-under-42GB-cap-not-GMP-abort
+SURVEYRESULT cell=26 status=TIMEOUT     subcells=0 wall>21600 peakrss=2.1  staging_steps=0 rc=124 note=wall-clock-wall-flat-2GB
+SURVEYRESULT cell=28 status=TIMEOUT     subcells=0 wall>21600 peakrss=8.8  staging_steps=0 rc=124 note=compute-bound-flat-rss
+ARENA_GC_RERUN_DONE 2026-07-09T23:56 host=c200-1 completed=0/5 failure_mode=shifted(GMP-abort->clean-MemoryError/wall-timeout)

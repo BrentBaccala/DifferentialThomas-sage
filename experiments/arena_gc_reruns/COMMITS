@@ -1,0 +1,2 @@
+ea5b914 arena GC: fire inside pseudo_remainder loop + tail-reduction endgame
+928ae45 degree_in: C-native bap_degree query instead of a full read_terms walk
