@@ -39,15 +39,19 @@ Supported ranking specs (Phase 1):
 Deferred: ``EliminateFunction``, ``EliminateFirstIndependentVariable``,
 ``EliminateIndependentVariables`` (all reduce to the matrix path when needed).
 
-CAVEAT (multi-derivation block/matrix rankings): within a block the reference
-matrix breaks equal-order exponent ties *ascending from the last independent
-variable* (a ``+1`` row), which is NOT degrevlex; the substrate ring installs
-per-block ``degrevlexB``.  For a single derivation the two coincide (all of
-ex1-ex3 and the flat-DegRevLex hydrogen ranking are unaffected); a
-multi-derivation *block* ranking may disagree on equal-order ties between the
-python comparator and the substrate ring's internal leader.  PolynomialObject
-cross-asserts its comparator-derived leader against BLAD's on every
-polynomial, so a divergence is caught loudly, not silently.
+Block rankings and the Maple reference (multi-derivation note): within a
+block the *reference* matrix breaks equal-order exponent ties ascending from
+the last independent variable (``+1`` rows), which is NOT degrevlex, while
+the substrate ring installs per-block ``degrevlexB``.  For a single
+derivation the two coincide (all of ex1-ex3 are single-derivation); for >=2
+derivations they disagree on equal-order ties, so this port's
+:func:`_block_matrix` deliberately uses ``-1`` tie-break rows (``-e_n, ...,
+-e_2`` = degrevlex) to match BLAD -- the substrate that actually computes
+leaders -- rather than the reference's convention.  The result is still a
+valid block/elimination ranking (elimination between blocks, order-graded
+degrevlex within).  PolynomialObject cross-asserts its comparator-derived
+leader against BLAD's on every polynomial, so any residual divergence is
+caught loudly, not silently.
 """
 
 from fractions import Fraction
@@ -333,13 +337,20 @@ def _gcd(a, b):
 # -- matrix construction for block rankings (reference lines 220-241) ---------
 
 def _block_matrix(ivar, blocks):
-    """The reference's matrix for a block ranking ``[[..],[..],..]``:
+    """The matrix for a block ranking ``[[..],[..],..]``:
 
     - rows 1..nblocks: block-membership indicators (elimination between
       blocks, earlier block higher);
     - row nblocks+1: total differentiation order;
-    - rows nblocks+2..nblocks+nivar: equal-order tie-break, ascending from the
-      LAST independent variable (the reference's ``+1`` convention);
+    - rows nblocks+2..nblocks+nivar: equal-order tie-break ``-e_n, ...,
+      -e_2`` -- degrevlex (reverse lex, smaller last differing exponent
+      wins), matching the ``degrevlexB`` subranking the substrate ring
+      installs per block.  NOTE: this deliberately DIVERGES from the Maple
+      reference, whose rows are ``+e_n, ..., +e_2`` (ascending from the
+      last independent variable) -- for a single derivation there are no
+      such rows so the two coincide, but for >=2 derivations the reference
+      convention contradicts BLAD's within-block leader and the port
+      follows BLAD (see the module docstring's substrate-agreement note);
     - remaining rows: within-block dvar position (earlier = higher).
     """
     ni = len(ivar)
@@ -351,7 +362,7 @@ def _block_matrix(ivar, blocks):
     for i in range(1, ni + 1):                      # 1-based i
         A[nb + 1 - 1][i - 1] = 1                    # row nb+1: total order
         if i != 1:
-            A[nb + ni - i + 2 - 1][i - 1] = 1       # tie-break rows
+            A[nb + ni - i + 2 - 1][i - 1] = -1      # tie-break rows (degrevlex)
     # dvar rows
     k = 0
     for i, blk in enumerate(blocks, start=1):       # 1-based block index
